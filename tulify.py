@@ -1,6 +1,7 @@
 import flet as ft
 from controles.main_inventario import Inventario
 from controles.logo import Logo
+from sqlite3 import Connection
 
 
 class Tulify(ft.Row):
@@ -11,6 +12,7 @@ class Tulify(ft.Row):
         self.pagina.fonts = {'fuente_logo': 'https://raw.githubusercontent.com/google/fonts/main/apache/rancho/Rancho-Regular.ttf'}
         self.pagina.theme = ft.Theme(color_scheme_seed='blue')
 
+        self.db = Connection('base.db')
         self.destinos = [
             ft.NavigationRailDestination(
                 icon=ft.icons.INVENTORY_2,
@@ -39,7 +41,7 @@ class Tulify(ft.Row):
                 destinations=self.destinos
             ),
             ft.VerticalDivider(width=1),
-            Inventario()
+            Inventario(self.db)
         ]
 
         self.pagina.add(self)
@@ -52,7 +54,7 @@ class Tulify(ft.Row):
         i = e.control.selected_index
         if i == 0:
             del self.controls[2]
-            self.controls.append(Inventario())
+            self.controls.append(Inventario(self.db))
         elif i == 1:
             pass
         elif i == 2:

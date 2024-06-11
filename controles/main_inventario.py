@@ -1,18 +1,21 @@
 import flet as ft
 from controles.fila import FilaCuerpo
+from tablas.inventario import InventarioDB, InvMarcasDB, InvProveedoresDB, InvCategoriasDB, InvSubCategoriasDB, RefInvProveedoresDB
+from sqlite3 import Connection
 
 
 class Inventario(ft.Column):
-    def __init__(self):
+    def __init__(self, db: Connection):
         super().__init__(expand=True, run_spacing=8)
+        self.db = db
         self.controls = [
             Fila1(),
-            Fila2()
+            Fila2(self.db)
         ]
 
 
 class Fila1(FilaCuerpo):
-    def __init__(self):
+    def __init__(self, db: Connection | None = None):
         super().__init__()
         self.controls = [
             InvStock(),
@@ -22,10 +25,10 @@ class Fila1(FilaCuerpo):
 
 
 class Fila2(FilaCuerpo):
-    def __init__(self):
+    def __init__(self, db: Connection | None = None):
         super().__init__()
         self.controls = [
-            InvPlanilla()
+            InvPlanilla(db)
         ]
 
 
@@ -100,16 +103,17 @@ class InvProveedores(ft.Card):
         return contenido
 
 
-class InvPlanilla(ft.GridView):
-    def __init__(self):
-        super().__init__(expand=True)
+class InvPlanilla(ft.DataTable):
+    def __init__(self, db: Connection):
+        self.db = db
+        self.inventario = InventarioDB(self.db)
         self.titulos = (
             'ID',
             'SKU',
             'Nombre',
             'Descripcion',
             'Categoria',
-            'Subcategoria',
+            'Sub categoria',
             'Marca',
             'Modelo',
             'Precio costo',
@@ -119,17 +123,16 @@ class InvPlanilla(ft.GridView):
             'Ultimo ingreso'
         )
 
-        self.runs_count = len(self.titulos)
-        # Titulos como texto
-        self.controls = [ft.Text(value=c, weight=ft.FontWeight.W_900) for c in self.titulos]
+        super().__init__(
+            columns=[ft.DataColumn(ft.Text(t)) for t in self.titulos]
+        )
         # Datos
-        self.controls.extend([ft.Text(value=c, weight=ft.FontWeight.W_900) for c in self.titulos])
+        self.cargar_celdas()
 
     def cargar_celdas(self):
         """
-        Carga de celdas por columna
-        :return:
+        Carga de celdas por fila
         """
-        controles = []
-
-        return controles
+        inventario = InventarioDB(self.db)
+        for i, fila in inventario.df.iterrows():
+            self.rows.append(ft.DataRow([ft.DataCell(ft.Text(v if v else 'SinInfo')) for v in fila]))
