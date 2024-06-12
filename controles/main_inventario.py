@@ -1,7 +1,8 @@
 import flet as ft
 from controles.fila import FilaCuerpo
-from tablas.inventario import InventarioDB, InvMarcasDB, InvProveedoresDB, InvCategoriasDB, InvSubCategoriasDB, RefInvProveedoresDB
+from tablas.inventario import InventarioDB
 from sqlite3 import Connection
+from validadores import filtrar_vacios, es_numerica
 
 
 class Inventario(ft.Column):
@@ -108,7 +109,6 @@ class InvPlanilla(ft.DataTable):
         self.db = db
         self.inventario = InventarioDB(self.db)
         self.titulos = (
-            'ID',
             'SKU',
             'Nombre',
             'Descripcion',
@@ -124,7 +124,10 @@ class InvPlanilla(ft.DataTable):
         )
 
         super().__init__(
-            columns=[ft.DataColumn(ft.Text(t)) for t in self.titulos]
+            columns=[ft.DataColumn(
+                ft.Text(t, weight=ft.FontWeight.W_600),
+                numeric=es_numerica(t)
+            ) for t in self.titulos]
         )
         # Datos
         self.cargar_celdas()
@@ -134,5 +137,5 @@ class InvPlanilla(ft.DataTable):
         Carga de celdas por fila
         """
         inventario = InventarioDB(self.db)
-        for i, fila in inventario.df.iterrows():
-            self.rows.append(ft.DataRow([ft.DataCell(ft.Text(v if v else 'SinInfo')) for v in fila]))
+        for i, fila in inventario.df_fk.iterrows():
+            self.rows.append(ft.DataRow([ft.DataCell(ft.Text(filtrar_vacios(v))) for v in fila]))
