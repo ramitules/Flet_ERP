@@ -1,5 +1,5 @@
 import flet as ft
-from controles.fila import FilaCuerpo
+from pandas import DataFrame
 from tablas.inventario import InventarioDB
 from sqlite3 import Connection
 from validadores import filtrar_vacios, es_numerica
@@ -8,62 +8,76 @@ from validadores import filtrar_vacios, es_numerica
 class Inventario(ft.Column):
     def __init__(self, db: Connection):
         super().__init__(expand=True, run_spacing=8)
-        self.db = db
+        self.inventario = InventarioDB(db)
         self.controls = [
-            Fila1(),
-            Fila2(self.db)
+            ft.Row(height=250, alignment=ft.MainAxisAlignment.SPACE_EVENLY),
+            ft.Row(height=250, alignment=ft.MainAxisAlignment.SPACE_EVENLY)
         ]
 
+        self.cargar_filas()
 
-class Fila1(FilaCuerpo):
-    def __init__(self, db: Connection | None = None):
-        super().__init__()
-        self.controls = [
-            InvStock(),
-            InvProveedores(),
-            InvStock()
+    def cargar_filas(self):
+        self.controls[1].controls = [
+            InvPlanilla(self.inventario.df_fk)
+        ]
+        self.controls[0].controls = [
+            ft.Card(width=400, content=self.__set_contenido_stock()),
+            InvProveedores()
         ]
 
+    def filtrar_stock(self, ev=None):
+        del self.controls[1].controls[0]
+        df_fk = self.inventario.df_fk.copy()
+        df_fk = df_fk[df_fk['stock'] > 0]
+        self.controls[1].controls = [InvPlanilla(df_fk)]
+        self.update()
 
-class Fila2(FilaCuerpo):
-    def __init__(self, db: Connection | None = None):
-        super().__init__()
-        self.controls = [
-            InvPlanilla(db)
-        ]
+    def filtrar_sin_stock(self, ev=None):
+        del self.controls[1].controls[0]
+        df_fk = self.inventario.df_fk.copy()
+        df_fk = df_fk[df_fk['stock'] == 0]
+        self.controls[1].controls = [InvPlanilla(df_fk)]
+        self.update()
 
+    def quitar_filtro(self, ev=None):
+        del self.controls[1].controls[0]
+        self.controls[1].controls = [InvPlanilla(self.inventario.df_fk)]
+        self.update()
 
-class InvStock(ft.Card):
-    def __init__(self):
-        super().__init__(width=400)
-        self.content = self.set_contenido()
+    def __set_contenido_stock(self):
+        cantidades = self.inventario.df['stock'].value_counts()
 
-    def set_contenido(self):
-        en_stock = 6
-        sin_stock = 4
+        if 0 in cantidades:
+            sin_stock = cantidades[0]
+        else:
+            sin_stock = 0
+
+        en_stock = len(self.inventario.df) - sin_stock
         porcentaje = (en_stock / (en_stock + sin_stock))
         boton_stock = ft.TextButton(
             content=ft.Text(
                 f'En stock\n{en_stock}',
                 text_align=ft.TextAlign.CENTER,
                 color=ft.colors.BLUE_900
-            )
+            ),
+            on_click=self.filtrar_stock
         )
         boton_s_stock = ft.TextButton(
             content=ft.Text(
                 f'Sin stock\n{sin_stock}',
                 text_align=ft.TextAlign.CENTER,
                 color=ft.colors.BLUE_900
-            )
+            ),
+            on_click=self.filtrar_sin_stock
         )
 
         controles_columna = [
-            ft.TextButton(content=ft.Text('Stock', size=20)),
+            ft.TextButton(content=ft.Text('Stock', size=20), on_click=self.quitar_filtro),
             ft.Column(
                 controls=[
                     ft.ProgressBar(porcentaje, bgcolor="#eeeeee", width=350),
                     ft.Text(
-                        f'{porcentaje * 100}% disponible',
+                        f'{int(porcentaje * 100)}% disponible',
                         weight=ft.FontWeight.W_600
                     )
                 ],
@@ -105,9 +119,8 @@ class InvProveedores(ft.Card):
 
 
 class InvPlanilla(ft.DataTable):
-    def __init__(self, db: Connection):
-        self.db = db
-        self.inventario = InventarioDB(self.db)
+    def __init__(self, inventario: DataFrame):
+        self.inventario = inventario
         self.titulos = (
             'SKU',
             'Nombre',
@@ -136,6 +149,5 @@ class InvPlanilla(ft.DataTable):
         """
         Carga de celdas por fila
         """
-        inventario = InventarioDB(self.db)
-        for i, fila in inventario.df_fk.iterrows():
+        for i, fila in self.inventario.iterrows():
             self.rows.append(ft.DataRow([ft.DataCell(ft.Text(filtrar_vacios(v))) for v in fila]))

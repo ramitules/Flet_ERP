@@ -8,6 +8,7 @@ class Tulify(ft.Row):
     def __init__(self, pagina: ft.Page):
         super().__init__(expand=True)
         self.pagina = pagina
+        self.pagina.window_maximized = True
         self.pagina.title = 'Tulify'
         self.pagina.fonts = {'fuente_logo': 'https://raw.githubusercontent.com/google/fonts/main/apache/rancho/Rancho-Regular.ttf'}
         self.pagina.theme = ft.Theme(color_scheme_seed='blue')
