@@ -1,5 +1,7 @@
 import flet as ft
 from controles.main_inventario import Inventario
+from controles.main_compras import Compras
+from controles.main_ventas import Ventas
 from controles.logo import Logo
 from sqlite3 import Connection
 
@@ -20,14 +22,14 @@ class Tulify(ft.Row):
                 selected_icon=ft.icons.INVENTORY_2_OUTLINED,
                 label='Inventario'),
             ft.NavigationRailDestination(
+                icon=ft.icons.SHOPPING_CART,
+                selected_icon=ft.icons.SHOPPING_CART_OUTLINED,
+                label='Compras'
+            ),
+            ft.NavigationRailDestination(
                 icon=ft.icons.SELL,
                 selected_icon=ft.icons.SELL_OUTLINED,
                 label='Ventas'
-            ),
-            ft.NavigationRailDestination(
-                icon=ft.icons.PERSON,
-                selected_icon=ft.icons.PERSON_OUTLINE,
-                label='Clientes'
             )
         ]
         self.controls = [
@@ -53,13 +55,13 @@ class Tulify(ft.Row):
         :param e: evento de ft.NavigationRail['on_change']
         """
         i = e.control.selected_index
+        del self.controls[2]
         if i == 0:
-            del self.controls[2]
             self.controls.append(Inventario(self.db))
         elif i == 1:
-            pass
+            self.controls.append(Compras(self.db))
         elif i == 2:
-            pass
+            self.controls.append(Ventas(self.db))
 
         self.update()
         '''

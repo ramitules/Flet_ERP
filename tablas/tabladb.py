@@ -16,6 +16,7 @@ class TablaDB:
         self.__columnas = columnas
         self.__tabla = tabla
         self.df = pd.read_sql(sql=f'SELECT * FROM {self.__tabla}', con=self._db, index_col='id')
+        self.df_fk = self.df.copy()
 
     def insertar(self, vals: tuple):
         query = (f'INSERT INTO {self.__tabla} ({', '.join(self.__columnas)}) '

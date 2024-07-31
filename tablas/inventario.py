@@ -31,16 +31,6 @@ class InventarioDB(TablaDB):
         return df_aux
 
 
-class InvProveedoresDB(TablaDB):
-    def __init__(self, db: Connection):
-        """
-        Tabla "InvProveedores". Utilizar self.df para trabajar con Pandas.DataFrame
-        :param db: Conexion a base de datos sqlite3.Connection
-        """
-        columnas = ('nombre', 'contacto', 'numero', 'mail', 'direccion')
-        super().__init__(db=db, tabla='InvProveedores', columnas=columnas)
-
-
 class InvCategoriasDB(TablaDB):
     def __init__(self, db: Connection):
         """
@@ -69,13 +59,3 @@ class InvMarcasDB(TablaDB):
         """
         columnas = ('nombre', )
         super().__init__(db=db, tabla='InvMarcas', columnas=columnas)
-
-
-class RefInvProveedoresDB(TablaDB):
-    def __init__(self, db: Connection):
-        """
-        Tabla "RefInvProveedores". Utilizar self.df para trabajar con Pandas.DataFrame
-        :param db: Conexion a base de datos sqlite3.Connection
-        """
-        columnas = ('nombre', )
-        super().__init__(db=db, tabla='RefInvProveedores', columnas=columnas)
